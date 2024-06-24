@@ -10,7 +10,7 @@ builder.Services.AddDbContext<PizzaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING") ?? throw new InvalidOperationException("Connection string 'AZURE_SQL_CONNECTIONSTRING' not found.")));
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<PizzaDbContext>();
-
+builder.Services.Configure<PasswordHasherOptions>(options => options.IterationCount = 210000);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
