@@ -1,4 +1,4 @@
-## Powershell CLI Version (Yulun recommend)
+## Powershell CLI Instruction
 1. Paste the following in your Powershell/terminal:
 
 	```
@@ -14,8 +14,8 @@
    1. Create a `Models` directory at the project root level. 
    2. Create a custom model cs file in `Models`. [Example.](https://learn.microsoft.com/en-us/aspnet/core/tutorials/razor-pages/model?view=aspnetcore-8.0&tabs=visual-studio)
    
-   > [!CAUTION]
-   > Be mindful of the file and object class name, make sure it does not conflict with the project name & namespace.
+> [!CAUTION]
+> Be mindful of the file and object class name, make sure it does not conflict with the project name & namespace.
 	 
    3. Run the following code to scaffold CRUD on that particular model, replace the \<...> with your own value:
 		```
@@ -31,19 +31,45 @@
 	```
 	builder.Services.Configure<PasswordHasherOptions>(options => options.IterationCount = 210000);
 	```
-
-7. Run the following in Powershell/terminal to update the database schema:
+7. In **Program.cs**, replace `builder.Services.AddRazorPages();` with the following: 
+	```
+	builder.Services.AddRazorPages(options =>
+	{
+			options.Conventions.AuthorizeFolder("/");
+	});
+	```
+	This will enable global authorization. Unauthenticated users will be automatically redirected to the login page at all time.
+8. Run the following in Powershell/terminal to update the database schema:
 	```
 	dotnet ef migrations add IdentityMigration
 	dotnet ef database update
 	```
-
-
-## Visual Studio Version
-1.	From Solution Explorer, right-click on the project > Add > New Scaffolded Item.
-2.	From the left pane of the Add New Scaffolded Item dialog, select Identity. Select Identity in the center pane. Select the Add button.
-3.	In the Add Identity dialog, select the options you want.
-4.	For the data context (DbContext class): Select your data context class.
-5.	To create a data context and possibly create a new user class for Identity, select the + button. Accept the default value or specify a class (for example, Contoso.Data.ApplicationDbContext for a company named "Contoso"). To create a new user class, select the + button for User class and specify the class (for example, ContosoUser for a company named "Contoso"). You can also use this function to customize your user account information.
-6.	Select the Add button to run the scaffolder.
-7.	In Pages/Shared/_Layout.cshtml, add this line after the </ul> tag: <partial name="_LoginPartial" />
+9. Set up a SendGrid account with a valid email, create and store the API Key.
+10. Create a `Services` directory at the root of project if you don't already have one.
+11. Inside of `Services`, create `AuthMessageSenderOptions.cs`, copy the code in this repo.
+12. Run the following in Powershell/terminal to install necessary packages:
+	```
+	dotnet add package SendGrid
+	```
+13. Append the following after `"Logging" : {...},` in `appsettings.Development.json`:
+	```
+	"SendGrid": {
+    "SendGridKey": "<API Key from step 9>"
+  }
+	```
+>[!WARNING]
+>In production, sensitive data like this should not be stored in appsettings.json, consider other options like Azure Key Vault.
+14. Inside of `Services`, create `EmailSender.cs`, copy the code in this repo.
+15. Inside of `Program.cs`, add these on the top: 
+	```
+	using Microsoft.AspNetCore.Identity.UI.Services;
+	using WebPWrecover.Services;
+	```
+	And these before `var app = builder.Build();`:
+	```
+	builder.Services.AddTransient<IEmailSender, EmailSender>();
+	builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration.GetSection("SendGrid"));
+	```
+16. In `Areas/Identity/Pages/Account/RegisterConfirmation.cshtml.cs`, the file created by aspnet-codegenerator, change `DisplayConfirmAccountLink = true;` on line 63 to `DisplayConfirmAccountLink = false;`.
+17. Don't forget to update the message being sent to avoid being marked as junk/spam.
+18. 
