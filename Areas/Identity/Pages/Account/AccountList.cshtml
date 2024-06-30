@@ -1,0 +1,44 @@
+@page
+@model AccountListModel
+@{
+  ViewData["Title"] = "Manage Accounts";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>
+  <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+  <thead>
+    <tr>
+      <th>
+        Email
+      </th>
+      <th>
+        Role
+      </th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in Model.userRoles)
+    {
+      <tr>
+        <td>
+          @Html.DisplayFor(modelItem => item.Email)
+        </td>
+        <td>
+          @foreach (var role in item.Roles)
+          {
+            @Html.DisplayFor(modelItem => role)
+          }
+        </td>
+        <td>
+          <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
+          <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
+          <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

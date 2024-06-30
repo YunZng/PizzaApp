@@ -51,10 +51,12 @@
 	```
 	dotnet add package SendGrid
 	```
-13. Append the following after `"Logging" : {...},` in `appsettings.Development.json`:
+13. Append the following after `"Logging" : {...},` in `appsettings.Development.json`, replace `<...>` with your information:
 	```
 	"SendGrid": {
-    "SendGridKey": "<API Key from step 9>"
+    "SendGridKey": "<SendGrid API key>",
+    "SendGridEmail": "<SendGrid email>",
+    "AppOwnerEmail": "<App owner email>"
   }
 	```
 >[!WARNING]
@@ -70,6 +72,11 @@
 	builder.Services.AddTransient<IEmailSender, EmailSender>();
 	builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration.GetSection("SendGrid"));
 	```
+	These will allow you to access the values from step 13 using DI(dependency injection). You can use these values to configure which SendGrid email is used to send confirmation email.
+	In this repo, line 35 in `Services/EmailSender.cs` and line 141 in `Areas/Identity/Pages/Account/Register.cshtml.cs` both uses those custom values.
 16. In `Areas/Identity/Pages/Account/RegisterConfirmation.cshtml.cs`, the file created by aspnet-codegenerator, change `DisplayConfirmAccountLink = true;` on line 63 to `DisplayConfirmAccountLink = false;`.
-17. Don't forget to update the message being sent to avoid being marked as junk/spam.
-18. 
+17. Don't forget to update the message being sent to avoid being marked as junk/spam. (line 141 in `Areas/Identity/Pages/Account/Register.cshtml.cs`)
+
+> Up to this point, the app supports basic CRUD operation on a list of Pizza, basic authentication with email and password, and the ability to send account confirmation to specified email address.
+
+> The following procedures will refine the authentication and authorization with role-based authorization. 

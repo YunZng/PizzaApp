@@ -18,6 +18,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using WebPWrecover.Services;
+using Microsoft.Extensions.Options;
+using ContactManager.Authorization;
+
 
 namespace PizzaApp.Areas.Identity.Pages.Account
 {
@@ -25,24 +29,31 @@ namespace PizzaApp.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUserStore<IdentityUser> _userStore;
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        public AuthMessageSenderOptions Options { get; } //Set with Secret Manager.
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
+            RoleManager<IdentityRole> roleManager,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IOptions<AuthMessageSenderOptions> optionsAccessor
+            )
         {
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
+            _roleManager = roleManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            Options = optionsAccessor.Value;
         }
 
         /// <summary>
@@ -112,11 +123,38 @@ namespace PizzaApp.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
+                // Use owner role by default.
+                var role = Constants.OwnerRole;
+                var email = Options.AppOwnerEmail;
+                IdentityUser loggedInUser = await _userManager.GetUserAsync(User);
+                if (loggedInUser != null)
+                {
+                    var loggedInUserRole = (await _userManager.GetRolesAsync(loggedInUser)).ToString();
+                    if (loggedInUserRole == Constants.OwnerRole)
+                    {
+                        role = Constants.AdminRole;
+                        email = Input.Email;
+
+                    }
+                    else if (loggedInUserRole == Constants.AdminRole)
+                    {
+                        role = Constants.StaffRole;
+                        email = Input.Email;
+                    }
+                }
+                _logger.LogInformation("User added to role: " + role);
+
                 var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                var result = await _userManager.CreateAsync(user, Input.Password);
+                await _userManager.CreateAsync(user, Input.Password);
+                if (!await _roleManager.RoleExistsAsync(role))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(role));
+                }
+                // Role is beign assigned
+                var result = await _userManager.AddToRoleAsync(user, role);
 
                 if (result.Succeeded)
                 {
@@ -131,12 +169,12 @@ namespace PizzaApp.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    await _emailSender.SendEmailAsync(Options.AppOwnerEmail, "Confirm your email",
+                        $"A registration request from {email} for {role} role.\nPlease confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                        return RedirectToPage("RegisterConfirmation", new { email, returnUrl = returnUrl });
                     }
                     else
                     {

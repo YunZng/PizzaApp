@@ -12,10 +12,13 @@ builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/");
 });
+
 builder.Services.AddDbContext<PizzaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING") ?? throw new InvalidOperationException("Connection string 'AZURE_SQL_CONNECTIONSTRING' not found.")));
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<PizzaDbContext>();
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<PizzaDbContext>();
 
 // Configure PasswordHasher, compatibility mode defaults to 'ASP.NET Identity version 3', which uses SHA512 with 100,000 iterations.
 builder.Services.Configure<PasswordHasherOptions>(options => options.IterationCount = 210000);
