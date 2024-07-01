@@ -11,14 +11,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using PizzaApp.Areas.Identity.Data;
 
 namespace PizzaApp.Areas.Identity.Pages.Account
 {
     public class ConfirmEmailModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<PizzaIdentityUser> _userManager;
 
-        public ConfirmEmailModel(UserManager<IdentityUser> userManager)
+        public ConfirmEmailModel(UserManager<PizzaIdentityUser> userManager)
         {
             _userManager = userManager;
         }

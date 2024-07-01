@@ -10,15 +10,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using PizzaApp.Areas.Identity.Data;
 
 namespace PizzaApp.Areas.Identity.Pages.Account
 {
     public class ConfirmEmailChangeModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<PizzaIdentityUser> _userManager;
+        private readonly SignInManager<PizzaIdentityUser> _signInManager;
 
-        public ConfirmEmailChangeModel(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public ConfirmEmailChangeModel(UserManager<PizzaIdentityUser> userManager, SignInManager<PizzaIdentityUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;

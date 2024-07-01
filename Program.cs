@@ -4,6 +4,7 @@ using PizzaApp.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using WebPWrecover.Services;
+using PizzaApp.Areas.Identity.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

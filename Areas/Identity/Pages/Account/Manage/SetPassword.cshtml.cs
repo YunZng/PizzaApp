@@ -8,17 +8,18 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PizzaApp.Areas.Identity.Data;
 
 namespace PizzaApp.Areas.Identity.Pages.Account.Manage
 {
     public class SetPasswordModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<PizzaIdentityUser> _userManager;
+        private readonly SignInManager<PizzaIdentityUser> _signInManager;
 
         public SetPasswordModel(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            UserManager<PizzaIdentityUser> userManager,
+            SignInManager<PizzaIdentityUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;

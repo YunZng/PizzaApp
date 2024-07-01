@@ -11,14 +11,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using PizzaApp.Areas.Identity.Data;
 
 namespace PizzaApp.Areas.Identity.Pages.Account
 {
     public class ResetPasswordModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<PizzaIdentityUser> _userManager;
 
-        public ResetPasswordModel(UserManager<IdentityUser> userManager)
+        public ResetPasswordModel(UserManager<PizzaIdentityUser> userManager)
         {
             _userManager = userManager;
         }

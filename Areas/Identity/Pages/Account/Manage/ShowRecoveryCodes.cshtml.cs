@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using PizzaApp.Areas.Identity.Data;
 
 namespace PizzaApp.Areas.Identity.Pages.Account.Manage
 {

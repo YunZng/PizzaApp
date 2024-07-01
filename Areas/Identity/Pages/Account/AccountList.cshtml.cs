@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using PizzaApp.Areas.Identity.Data;
 using PizzaApp.Data;
 
 
@@ -20,24 +21,24 @@ namespace PizzaApp.Areas.Identity.Pages.Account
   public class AccountListModel : PageModel
   {
     private readonly PizzaDbContext _context;
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<PizzaIdentityUser> _userManager;
     public IList<UserRoles> userRoles;
     // Inject the database context to get user account data
     // Inject the user manager to get user account roles, this way we don't have to create custom identity classes, and just have to stick with the existing IdentityRole class.
-    public AccountListModel(PizzaDbContext context, UserManager<IdentityUser> userManager)
+    public AccountListModel(PizzaDbContext context, UserManager<PizzaIdentityUser> userManager)
     {
       _context = context;
       _userManager = userManager;
       userRoles = new List<UserRoles>();
     }
-    public IList<IdentityUser> Users { get; set; } = default!;
+    public IList<PizzaIdentityUser> Users { get; set; } = default!;
     // When page first launched, read throught the database, get user email and roles.
     // If the account is the app owner, get every account.
     // If the account is admin/manager, get every account created by this user.
     public async Task OnGetAsync()
     {
-      Users = await _context.Users.ToListAsync();
-      IdentityUser loggedInUser = await _userManager.GetUserAsync(User);
+      Users = (IList<PizzaIdentityUser>)await _context.Users.ToListAsync();
+      PizzaIdentityUser loggedInUser = await _userManager.GetUserAsync(User);
       // Owner
       if (await _userManager.IsInRoleAsync(loggedInUser, Constants.OwnerRole))
       {

@@ -1,7 +1,8 @@
 @using Microsoft.AspNetCore.Identity
+@using PizzaApp.Areas.Identity.Data
 
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<PizzaIdentityUser> SignInManager
+@inject UserManager<PizzaIdentityUser> UserManager
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))

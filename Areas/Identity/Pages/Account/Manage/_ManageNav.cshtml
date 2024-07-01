@@ -1,4 +1,5 @@
-@inject SignInManager<IdentityUser> SignInManager
+@using PizzaApp.Areas.Identity.Data
+@inject SignInManager<PizzaIdentityUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }

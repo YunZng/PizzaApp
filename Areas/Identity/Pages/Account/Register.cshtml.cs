@@ -18,42 +18,32 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using WebPWrecover.Services;
-using Microsoft.Extensions.Options;
-using ContactManager.Authorization;
-
+using PizzaApp.Areas.Identity.Data;
 
 namespace PizzaApp.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IUserStore<IdentityUser> _userStore;
-        private readonly IUserEmailStore<IdentityUser> _emailStore;
+        private readonly SignInManager<PizzaIdentityUser> _signInManager;
+        private readonly UserManager<PizzaIdentityUser> _userManager;
+        private readonly IUserStore<PizzaIdentityUser> _userStore;
+        private readonly IUserEmailStore<PizzaIdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        public AuthMessageSenderOptions Options { get; } //Set with Secret Manager.
 
         public RegisterModel(
-            UserManager<IdentityUser> userManager,
-            IUserStore<IdentityUser> userStore,
-            RoleManager<IdentityRole> roleManager,
-            SignInManager<IdentityUser> signInManager,
+            UserManager<PizzaIdentityUser> userManager,
+            IUserStore<PizzaIdentityUser> userStore,
+            SignInManager<PizzaIdentityUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender,
-            IOptions<AuthMessageSenderOptions> optionsAccessor
-            )
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
-            _roleManager = roleManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
-            Options = optionsAccessor.Value;
         }
 
         /// <summary>
@@ -123,38 +113,11 @@ namespace PizzaApp.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
-                // Use owner role by default.
-                var role = Constants.OwnerRole;
-                var email = Options.AppOwnerEmail;
-                IdentityUser loggedInUser = await _userManager.GetUserAsync(User);
-                if (loggedInUser != null)
-                {
-                    var loggedInUserRole = (await _userManager.GetRolesAsync(loggedInUser)).ToString();
-                    if (loggedInUserRole == Constants.OwnerRole)
-                    {
-                        role = Constants.AdminRole;
-                        email = Input.Email;
-
-                    }
-                    else if (loggedInUserRole == Constants.AdminRole)
-                    {
-                        role = Constants.StaffRole;
-                        email = Input.Email;
-                    }
-                }
-                _logger.LogInformation("User added to role: " + role);
-
                 var user = CreateUser();
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                await _userManager.CreateAsync(user, Input.Password);
-                if (!await _roleManager.RoleExistsAsync(role))
-                {
-                    await _roleManager.CreateAsync(new IdentityRole(role));
-                }
-                // Role is beign assigned
-                var result = await _userManager.AddToRoleAsync(user, role);
+                var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
@@ -169,12 +132,12 @@ namespace PizzaApp.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Options.AppOwnerEmail, "Confirm your email",
-                        $"A registration request from {email} for {role} role.\nPlease confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        return RedirectToPage("RegisterConfirmation", new { email, returnUrl = returnUrl });
+                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
                     else
                     {
@@ -192,27 +155,27 @@ namespace PizzaApp.Areas.Identity.Pages.Account
             return Page();
         }
 
-        private IdentityUser CreateUser()
+        private PizzaIdentityUser CreateUser()
         {
             try
             {
-                return Activator.CreateInstance<IdentityUser>();
+                return Activator.CreateInstance<PizzaIdentityUser>();
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(IdentityUser)}'. " +
-                    $"Ensure that '{nameof(IdentityUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(PizzaIdentityUser)}'. " +
+                    $"Ensure that '{nameof(PizzaIdentityUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
                     $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
             }
         }
 
-        private IUserEmailStore<IdentityUser> GetEmailStore()
+        private IUserEmailStore<PizzaIdentityUser> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
-            return (IUserEmailStore<IdentityUser>)_userStore;
+            return (IUserEmailStore<PizzaIdentityUser>)_userStore;
         }
     }
 }
