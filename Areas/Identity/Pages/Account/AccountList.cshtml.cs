@@ -53,7 +53,14 @@ namespace PizzaApp.Areas.Identity.Pages.Account
       }
       else if (await _userManager.IsInRoleAsync(loggedInUser, Constants.AdminRole))
       {
-        NotFound();
+        foreach (var user in Users)
+        {
+          IList<string> roles = await _userManager.GetRolesAsync(user);
+          if (user.Email != loggedInUser.Email && user.CreatedBy == loggedInUser.Email)
+          {
+            userRoles.Add(new UserRoles { Id = user.Id, Email = user.Email!, Roles = roles });
+          }
+        }
       }
     }
   }
