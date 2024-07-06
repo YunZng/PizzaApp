@@ -114,14 +114,14 @@ public class RegisterModel : PageModel
         if (ModelState.IsValid)
         {
             // Use owner role by default.
-            var role = Constants.OwnerRole;
-            var createdBy = "self";
+            var ownerExists = await _roleManager.RoleExistsAsync(Constants.OwnerRole);
+            var role = ownerExists ? Constants.AdminRole : Constants.OwnerRole;
             var email = Options.AppOwnerEmail;
+            var createdBy = ownerExists ? email : "self";
             var loggedInUserRole = role;
             PizzaIdentityUser loggedInUser = await _userManager.GetUserAsync(User);
             if (loggedInUser != null)
             {
-
                 email = Input.Email;
                 createdBy = loggedInUser.Email;
                 loggedInUserRole = (await _userManager.GetRolesAsync(loggedInUser))[0].ToString();
