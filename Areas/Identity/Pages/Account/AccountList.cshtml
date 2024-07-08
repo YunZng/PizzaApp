@@ -12,10 +12,16 @@
   <thead>
     <tr>
       <th>
+        Username
+      </th>
+      <th>
         Email
       </th>
       <th>
         Role
+      </th>
+      <th>
+        Manager Email
       </th>
       <th></th>
     </tr>
@@ -25,6 +31,9 @@
     {
       <tr>
         <td>
+          @Html.DisplayFor(modelItem => item.Username)
+        </td>
+        <td>
           @Html.DisplayFor(modelItem => item.Email)
         </td>
         <td>
@@ -32,6 +41,9 @@
           {
             @Html.DisplayFor(modelItem => role)
           }
+        </td>
+        <td>
+          @Html.DisplayFor(modelItem => item.ManagerEmail)
         </td>
         <td>
           <a asp-page="./EditAccount" asp-route-email="@item.Email">Edit</a> |

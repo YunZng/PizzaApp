@@ -4,6 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using System.Text.Encodings.Web;
 using ContactManager.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -46,54 +47,29 @@ public class RegisterModel : PageModel
         Options = optionsAccessor.Value;
     }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     [BindProperty]
     public InputModel Input { get; set; }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     public string ReturnUrl { get; set; }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     public IList<AuthenticationScheme> ExternalLogins { get; set; }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     public class InputModel
     {
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+
         [Required]
-        [EmailAddress]
+        [RegularExpression(@"^[A-Za-z][A-Za-z0-9_]{7,29}$")]
+        [Display(Name = "Username")]
+        public string Username { get; set; }
+
+        [Required]
+        [EmailAddress, RegularExpression(@"^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,9}$")]
         [Display(Name = "Email")]
         public string Email { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(63, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 14)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
         public string Password { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
@@ -117,11 +93,13 @@ public class RegisterModel : PageModel
             var ownerExists = await _roleManager.RoleExistsAsync(Constants.OwnerRole);
             var role = ownerExists ? Constants.AdminRole : Constants.OwnerRole;
             var email = Options.AppOwnerEmail;
+            var confirmationEmail = email;
             var createdBy = ownerExists ? email : "self";
             var loggedInUserRole = role;
             PizzaIdentityUser loggedInUser = await _userManager.GetUserAsync(User);
             if (loggedInUser != null)
             {
+                confirmationEmail = loggedInUser.Email;
                 email = Input.Email;
                 createdBy = loggedInUser.Email;
                 loggedInUserRole = (await _userManager.GetRolesAsync(loggedInUser))[0].ToString();
@@ -133,20 +111,14 @@ public class RegisterModel : PageModel
                 {
                     role = Constants.StaffRole;
                 }
+                _logger.LogInformation(loggedInUser.ToString() + loggedInUserRole + "User added to role: " + role);
             }
-            _logger.LogInformation(loggedInUser.ToString() + loggedInUserRole + "User added to role: " + role);
 
             var user = CreateUser();
             user.CreatedBy = createdBy;
-            await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+            await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-            await _userManager.CreateAsync(user, Input.Password);
-            if (!await _roleManager.RoleExistsAsync(role))
-            {
-                await _roleManager.CreateAsync(new IdentityRole(role));
-            }
-            // Role is beign assigned
-            var result = await _userManager.AddToRoleAsync(user, role);
+            var result = await _userManager.CreateAsync(user, Input.Password);
 
             if (result.Succeeded)
             {
@@ -161,9 +133,14 @@ public class RegisterModel : PageModel
                     values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                     protocol: Request.Scheme);
 
-                // await _emailSender.SendEmailAsync(Options.AppOwnerEmail, "Confirm your email",
-                //     $"A registration request from {email} for {role} role.\nPlease confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
+                await _emailSender.SendEmailAsync(confirmationEmail, "Confirm your email",
+                    $"A registration request from {email} for {role} role.\nPlease confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                if (!await _roleManager.RoleExistsAsync(role))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(role));
+                }
+                // Role is beign assigned
+                await _userManager.AddToRoleAsync(user, role);
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
                     return RedirectToPage("RegisterConfirmation", new { email, returnUrl = returnUrl });

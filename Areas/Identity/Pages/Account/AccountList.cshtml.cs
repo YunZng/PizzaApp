@@ -14,8 +14,10 @@ namespace PizzaApp.Areas.Identity.Pages.Account;
 public class UserRoles
 {
   public string Id { get; set; } = default!;
+  public string Username { get; set; } = default!;
   public string Email { get; set; } = default!;
   public IList<string> Roles { get; set; } = default!;
+  public string ManagerEmail { get; set; } = default!;
 }
 [Authorize(Roles = "Owner,Admin")]
 public class AccountListModel : PageModel
@@ -47,7 +49,7 @@ public class AccountListModel : PageModel
         IList<string> roles = await _userManager.GetRolesAsync(user);
         if (user.Email != loggedInUser.Email)
         {
-          userRoles.Add(new UserRoles { Id = user.Id, Email = user.Email!, Roles = roles });
+          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles, ManagerEmail = user.CreatedBy });
         }
       }
     }
@@ -58,7 +60,7 @@ public class AccountListModel : PageModel
         IList<string> roles = await _userManager.GetRolesAsync(user);
         if (user.Email != loggedInUser.Email && user.CreatedBy == loggedInUser.Email)
         {
-          userRoles.Add(new UserRoles { Id = user.Id, Email = user.Email!, Roles = roles });
+          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles, ManagerEmail = user.CreatedBy });
         }
       }
     }

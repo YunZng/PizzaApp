@@ -78,5 +78,22 @@
 17. Don't forget to update the message being sent to avoid being marked as junk/spam. (line 141 in `Areas/Identity/Pages/Account/Register.cshtml.cs`)
 
 > Up to this point, the app supports basic CRUD operation on a list of Pizza, basic authentication with email and password, and the ability to send account confirmation to specified email address.
+---
+> The following content will cover more advanced topics such as custom identity user, and role-based authorization.
 
-> The following procedures will refine the authentication and authorization with role-based authorization. 
+### Overview of the app
+The app comes with a predefined app owner email address. The first account to register will be the app owner, and a confirmation email will be sent to the app owner's email address. After that, all registeration requests will be considered the admin role, and the app owner will receive confirmation email of those requests.
+
+Both the app owner and admins have the ability to perform CRUD operations on accounts. In this particular implementation, however, the app owner can only create admin accounts, but can view/edit/delete every account including staffs. Admins, on the other hand, will only be authorized to perform CRUD on the staff accounts that they created.
+
+### Custom identity user
+Sometimes, you may want to store more information on an identity user, such as assigning a user to a manager. In the Pizza app, I added a custom field `CreatedBy` that represents the creator/manager of the account. 
+
+For example, the `CreatedBy` field of the app owner account john@email.com will be "self". The `CreatedBy` field of all admins will be "john@email.com". If an admin account doe@email.com created a staff account, then that staff account's `CreatedBy` field will be "doe@email.com". 
+
+This app also uses the `CreatedBy` field as a resource group for the purpose of demo. So accounts can only access data within the same `CreatedBy` group. 
+
+### Role-based Authorization
+Normally, following the .NET Identity tutorial, you will only encounter the `UserManager` class. If you want to assign role to users, we need to use both the `UserManager` and the `RoleManager` class. The first step is to create a role and store it in a separate table with `RoleManager`. Then roles are assigned to users with `UserManager`. Each user may have multiple roles, and each role may be assigned to multiple users. 
+
+Sometimes you may want to restrict access for certain roles. To do this, you need to add the `[Authorize]` attribute above a page model class. We can refine this attribute by passing the specified roles as comma separated list like `[Authorize(Roles = "Admin,Owner")]`. This will only give role "Admin" or "Owner" access to the page and functions. Within these page models, we will have to manually extract the roles of the logged in user with `UserManager` to controll the operation. 
