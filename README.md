@@ -1,3 +1,35 @@
+## Set up:
+1. If you don't already have the `appsettings.Development.json` file at the root of your project, creat it.
+2. In the `appsettings.Development.json` file, fill in the following field with your own information:
+	```
+	 {
+	  "DetailedErrors": true,
+	  "Logging": {
+	    "LogLevel": {
+	      "Default": "Information",
+	      "Microsoft.AspNetCore": "Warning"
+	    }
+	  },
+	  "ConnectionStrings": {
+	    "AZURE_SQL_CONNECTIONSTRING": <Your data>
+	  },
+	  "SendGrid": {
+	    "SendGridKey": <Your data>,
+	    "SendGridEmail": <Your data>,
+	    "AppOwnerEmail": <Your data>
+	  }
+	}
+ 	```
+ 3. In your Powershell/terminal:
+    	```
+	dotnet restore
+	dotnet tool install --global dotnet-ef
+	dotnet ef database update
+	dotnet build
+	dotnet run
+    	```
+
+> This guide will show you how the repo was built. Most of the content here was already implemented.
 ## Powershell CLI Instruction
 1. Paste the following in your Powershell/terminal:
 
