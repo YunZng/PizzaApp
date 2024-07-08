@@ -54,10 +54,10 @@
 13. Append the following after `"Logging" : {...},` in `appsettings.Development.json`, replace `<...>` with your information:
 	```
 	"SendGrid": {
-    "SendGridKey": "<SendGrid API key>",
-    "SendGridEmail": "<SendGrid email>",
-    "AppOwnerEmail": "<App owner email>"
-  }
+	    "SendGridKey": "<SendGrid API key>",
+	    "SendGridEmail": "<SendGrid email>",
+	    "AppOwnerEmail": "<App owner email>"
+  	}
 	```
 >[!WARNING]
 >In production, sensitive data like this should not be stored in appsettings.json, consider other options like Azure Key Vault.
