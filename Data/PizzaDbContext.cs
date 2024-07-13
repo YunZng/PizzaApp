@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PizzaApp.Areas.Identity.Data;
@@ -16,6 +12,7 @@ namespace PizzaApp.Data
         {
         }
 
-        public DbSet<PizzaApp.Models.Pizza> Pizza { get; set; } = default!;
+        public DbSet<Pizza> Pizza { get; set; } = default!;
+        public DbSet<Invitation> Invitations { get; set; } = default!;
     }
 }

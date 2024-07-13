@@ -10,5 +10,5 @@ namespace PizzaApp.Areas.Identity.Data;
 public class PizzaIdentityUser : IdentityUser
 {
   [PersonalData]
-  public string CreatedBy { get; set; } = default!;
+  public string Company { get; set; } = default!;
 }
