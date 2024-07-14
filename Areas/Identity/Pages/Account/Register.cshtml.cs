@@ -4,7 +4,6 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using System.Text.Encodings.Web;
 using ContactManager.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -55,9 +54,8 @@ public class RegisterModel : PageModel
     {
 
         [Required]
-        [RegularExpression(@"^[A-Za-z][A-Za-z0-9_]{7,29}$")]
-        [Display(Name = "Username")]
-        public string Username { get; set; }
+        [Display(Name = "Company")]
+        public string Company { get; set; }
 
         [Required]
         [EmailAddress, RegularExpression(@"^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,9}$")]
@@ -90,60 +88,40 @@ public class RegisterModel : PageModel
         if (ModelState.IsValid)
         {
             // Use owner role by default.
-            var ownerExists = await _roleManager.RoleExistsAsync(Constants.OwnerRole);
-            var role = ownerExists ? Constants.AdminRole : Constants.OwnerRole;
-            var email = Options.AppOwnerEmail;
-            var confirmationEmail = email;
-            var createdBy = ownerExists ? email : "self";
-            var loggedInUserRole = role;
-            PizzaIdentityUser loggedInUser = await _userManager.GetUserAsync(User);
-            if (loggedInUser != null)
-            {
-                confirmationEmail = loggedInUser.Email;
-                email = Input.Email;
-                createdBy = loggedInUser.Email;
-                loggedInUserRole = (await _userManager.GetRolesAsync(loggedInUser))[0].ToString();
-                if (loggedInUserRole == Constants.OwnerRole)
-                {
-                    role = Constants.AdminRole;
-                }
-                else if (loggedInUserRole == Constants.AdminRole)
-                {
-                    role = Constants.StaffRole;
-                }
-                _logger.LogInformation(loggedInUser.ToString() + loggedInUserRole + "User added to role: " + role);
-            }
+            var role = Constants.Owner;
 
             var user = CreateUser();
-            user.CreatedBy = createdBy;
-            await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+            user.Company = Input.Company;
+            await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
             var result = await _userManager.CreateAsync(user, Input.Password);
 
             if (result.Succeeded)
             {
-                _logger.LogInformation("User created a new account with password.");
-
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                 var callbackUrl = Url.Page(
                     "/Account/ConfirmEmail",
                     pageHandler: null,
-                    values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
+                    values: new { area = "Identity", userId, code, returnUrl },
                     protocol: Request.Scheme);
 
-                await _emailSender.SendEmailAsync(confirmationEmail, "Confirm your email",
-                    $"A registration request from {email} for {role} role.\nPlease confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                    $"You are registering an account at {Input.Company} for the {role} role.\n\nPlease confirm your account by clicking this link: {callbackUrl}");
+
+                // Create role in database if it doesn't exist.
                 if (!await _roleManager.RoleExistsAsync(role))
                 {
                     await _roleManager.CreateAsync(new IdentityRole(role));
                 }
+
                 // Role is beign assigned
                 await _userManager.AddToRoleAsync(user, role);
+
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
-                    return RedirectToPage("RegisterConfirmation", new { email, returnUrl = returnUrl });
+                    return RedirectToPage("RegisterConfirmation", new { Input.Email, returnUrl = returnUrl });
                 }
                 else
                 {

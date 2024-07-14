@@ -26,7 +26,7 @@ public class IndexModel : PageModel
     {
         var pizzas = await _context.Pizza.ToListAsync();
         PizzaIdentityUser user = await _userManager.GetUserAsync(User);
-        if (await _userManager.IsInRoleAsync(user, Constants.OwnerRole))
+        if (await _userManager.IsInRoleAsync(user, Constants.Owner))
         {
             Pizza = pizzas;
         }
@@ -34,7 +34,7 @@ public class IndexModel : PageModel
         {
             foreach (var pizza in pizzas)
             {
-                if (pizza.AdminGroup == user.CreatedBy || pizza.AdminGroup == user.Email)
+                if (pizza.AdminGroup == user.Company || pizza.AdminGroup == user.Email)
                 {
                     Pizza.Add(new Pizza
                     {

@@ -40,8 +40,8 @@ namespace PizzaApp.Pages.Pizzas
         {
             _logger.LogInformation("call me");
             PizzaIdentityUser user = await _userManager.GetUserAsync(User);
-            var isAdmin = await _userManager.IsInRoleAsync(user, Constants.AdminRole);
-            var adminGroup = isAdmin ? user.Email : user.CreatedBy;
+            var isAdmin = await _userManager.IsInRoleAsync(user, Constants.Manager);
+            var adminGroup = isAdmin ? user.Email : user.Company;
             if (!ModelState.IsValid)
             {
                 _logger.LogError("Model state is invalid");

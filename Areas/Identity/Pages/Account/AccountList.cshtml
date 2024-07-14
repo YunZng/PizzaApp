@@ -6,7 +6,7 @@
 
 <h1>@ViewData["Title"]</h1>
 <p>
-  <a asp-page="./Register">Create a new user</a>
+  <a asp-page="./InviteUser">Invite user</a>
 </p>
 <table class="table">
   <thead>
@@ -21,7 +21,7 @@
         Role
       </th>
       <th>
-        Manager Email
+        Company
       </th>
       <th></th>
     </tr>
@@ -41,9 +41,6 @@
           {
             @Html.DisplayFor(modelItem => role)
           }
-        </td>
-        <td>
-          @Html.DisplayFor(modelItem => item.ManagerEmail)
         </td>
         <td>
           <a asp-page="./EditAccount" asp-route-email="@item.Email">Edit</a> |

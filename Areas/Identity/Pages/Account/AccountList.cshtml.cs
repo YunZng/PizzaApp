@@ -17,9 +17,8 @@ public class UserRoles
   public string Username { get; set; } = default!;
   public string Email { get; set; } = default!;
   public IList<string> Roles { get; set; } = default!;
-  public string ManagerEmail { get; set; } = default!;
 }
-[Authorize(Roles = "Owner,Admin")]
+[Authorize(Roles = "Owner,Manager")]
 public class AccountListModel : PageModel
 {
   private readonly PizzaDbContext _context;
@@ -42,25 +41,25 @@ public class AccountListModel : PageModel
     Users = await _context.Users.ToListAsync();
     PizzaIdentityUser loggedInUser = await _userManager.GetUserAsync(User);
     // Owner
-    if (await _userManager.IsInRoleAsync(loggedInUser, Constants.OwnerRole))
+    if (await _userManager.IsInRoleAsync(loggedInUser, Constants.Owner))
     {
       foreach (var user in Users)
       {
         IList<string> roles = await _userManager.GetRolesAsync(user);
         if (user.Email != loggedInUser.Email)
         {
-          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles, ManagerEmail = user.CreatedBy });
+          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles});
         }
       }
     }
-    else if (await _userManager.IsInRoleAsync(loggedInUser, Constants.AdminRole))
+    else if (await _userManager.IsInRoleAsync(loggedInUser, Constants.Manager))
     {
       foreach (var user in Users)
       {
         IList<string> roles = await _userManager.GetRolesAsync(user);
-        if (user.Email != loggedInUser.Email && user.CreatedBy == loggedInUser.Email)
+        if (user.Email != loggedInUser.Email && user.Company == loggedInUser.Email)
         {
-          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles, ManagerEmail = user.CreatedBy });
+          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles});
         }
       }
     }

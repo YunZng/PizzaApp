@@ -3,8 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using PizzaApp.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using WebPWrecover.Services;
 using PizzaApp.Areas.Identity.Data;
+using PizzaApp.Services;
+using WebPWrecover.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +25,12 @@ builder.Services.AddDefaultIdentity<PizzaIdentityUser>(options => options.SignIn
 // Configure PasswordHasher, compatibility mode defaults to 'ASP.NET Identity version 3', which uses SHA512 with 100,000 iterations.
 builder.Services.Configure<PasswordHasherOptions>(options => options.IterationCount = 210000);
 
-// Set up SendGrid email sender
+// Set up email sender
 builder.Services.AddTransient<IEmailSender, EmailSender>();
-builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration.GetSection("SendGrid"));
+builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration.GetSection("SMTP"));
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<InvitationService>();
 
 
 

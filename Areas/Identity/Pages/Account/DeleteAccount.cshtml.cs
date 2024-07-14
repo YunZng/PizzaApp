@@ -8,7 +8,7 @@ using PizzaApp.Areas.Identity.Data;
 
 namespace PizzaApp.Areas.Identity.Pages.Account;
 
-[Authorize(Roles = "Admin,Owner")]
+[Authorize(Roles = "Owner,Manager")]
 public class DeleteAccountModel : PageModel
 {
   private readonly UserManager<PizzaIdentityUser> _userManager;

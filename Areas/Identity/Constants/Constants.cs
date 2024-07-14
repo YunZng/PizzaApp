@@ -1,9 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ContactManager.Authorization
 {
   public class Constants
   {
-    public static readonly string OwnerRole = "Owner";
-    public static readonly string AdminRole = "Admin";
-    public static readonly string StaffRole = "Staff";
+    [Display(Name = "Owner")]
+    public static readonly string Owner = "Owner";
+    [Display(Name = "Manager")]
+    public static readonly string Manager = "Manager";
+    [Display(Name = "Staff")]
+    public static readonly string Staff = "Staff";
   }
 }
