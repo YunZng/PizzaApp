@@ -3,21 +3,27 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text;
 using ContactManager.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
+using NuGet.Protocol;
 using PizzaApp.Areas.Identity.Data;
+using PizzaApp.Data;
 using WebPWrecover.Services;
 
 namespace PizzaApp.Areas.Identity.Pages.Account;
 public class RegisterModel : PageModel
 {
+    private readonly PizzaDbContext _context;
     private readonly SignInManager<PizzaIdentityUser> _signInManager;
     private readonly UserManager<PizzaIdentityUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
@@ -26,8 +32,13 @@ public class RegisterModel : PageModel
     private readonly ILogger<RegisterModel> _logger;
     private readonly IEmailSender _emailSender;
     private AuthMessageSenderOptions Options { get; }
+    public bool Disabled { get; set; } = false;
+    [BindProperty(SupportsGet = true)]
+    public string Token { get; set; }
+    public static Invitation Invitation { get; set; }
 
     public RegisterModel(
+        PizzaDbContext pizzaDbContext,
         UserManager<PizzaIdentityUser> userManager,
         RoleManager<IdentityRole> roleManager,
         IUserStore<PizzaIdentityUser> userStore,
@@ -36,6 +47,7 @@ public class RegisterModel : PageModel
         IEmailSender emailSender,
         IOptions<AuthMessageSenderOptions> optionsAccessor)
     {
+        _context = pizzaDbContext;
         _userManager = userManager;
         _roleManager = roleManager;
         _userStore = userStore;
@@ -79,16 +91,45 @@ public class RegisterModel : PageModel
     {
         ReturnUrl = returnUrl;
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+        _logger.LogInformation("token is " + Token);
+        Invitation = await _context.Invitations.FindAsync(Token);
+        if (Invitation != null)
+        {
+            if (Invitation.IsUsed || Invitation.ExpiryDate < DateTime.Now)
+            {
+                RedirectToPage("/Identity/Account/InvalidToken");
+            }
+            Input = new InputModel
+            {
+                Company = Invitation.Company,
+                Email = Invitation.Email,
+            };
+            Disabled = true;
+        }
     }
 
     public async Task<IActionResult> OnPostAsync(string returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        if (Invitation != null)
+        {
+            if (Invitation.IsUsed || Invitation.ExpiryDate < DateTime.Now)
+            {
+                RedirectToPage("/Identity/Account/InvalidToken");
+            }
+            Input.Company = Invitation.Company;
+            Input.Email = Invitation.Email;
+            Disabled = true;
+            ModelState.Remove("Input.Company");
+            ModelState.Remove("Input.Email");
+        }
+
         if (ModelState.IsValid)
         {
             // Use owner role by default.
-            var role = Constants.Owner;
+            var role = Disabled ? Invitation.Role : Constants.Owner;
 
             var user = CreateUser();
             user.Company = Input.Company;
@@ -134,7 +175,6 @@ public class RegisterModel : PageModel
                 ModelState.AddModelError(string.Empty, error.Description);
             }
         }
-
         // If we got this far, something failed, redisplay form
         return Page();
     }

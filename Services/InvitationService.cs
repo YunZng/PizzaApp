@@ -46,7 +46,7 @@ public class InvitationService
         await _context.SaveChangesAsync();
 
         var domain = _httpContextAccessor.HttpContext.Request.Host.Value;
-        var link = $"https://{domain}/Register?token={token}";
+        var link = $"http://{domain}/Identity/Account/Register?token={token}";
         return link;
     }
 }

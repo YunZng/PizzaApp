@@ -7,7 +7,7 @@
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
-        @if (User.IsInRole("Company Owner"))
+        @if (User.IsInRole("Owner"))
         {
             <li class="nav-item">
                 <a class="nav-link text-dark" id="manage" asp-area="Identity" asp-page="/Account/AccountList">Manage Accounts</a>

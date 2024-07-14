@@ -7,23 +7,16 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Options;
 using PizzaApp.Areas.Identity.Data;
 using PizzaApp.Services;
-using WebPWrecover.Services;
 
 namespace PizzaApp.Areas.Identity.Pages.Account;
 public class InviteUserModel : PageModel
 {
   public string ReturnUrl { get; set; }
-  private readonly SignInManager<PizzaIdentityUser> _signInManager;
   private readonly UserManager<PizzaIdentityUser> _userManager;
-  private readonly RoleManager<IdentityRole> _roleManager;
-  private readonly IUserStore<PizzaIdentityUser> _userStore;
-  private readonly IUserEmailStore<PizzaIdentityUser> _emailStore;
   private readonly ILogger<RegisterModel> _logger;
   private readonly IEmailSender _emailSender;
-  private AuthMessageSenderOptions Options { get; }
   private readonly InvitationService _invitationService;
   public string Role { get; set; } = Constants.Staff;
   public string StatusMessage { get; set; } = default!;
@@ -36,17 +29,13 @@ public class InviteUserModel : PageModel
         };
   public InviteUserModel(
       UserManager<PizzaIdentityUser> userManager,
-      RoleManager<IdentityRole> roleManager,
       ILogger<RegisterModel> logger,
       IEmailSender emailSender,
-      IOptions<AuthMessageSenderOptions> optionsAccessor,
       InvitationService invitationService)
   {
     _userManager = userManager;
-    _roleManager = roleManager;
     _logger = logger;
     _emailSender = emailSender;
-    Options = optionsAccessor.Value;
     _invitationService = invitationService;
   }
 
@@ -63,9 +52,6 @@ public class InviteUserModel : PageModel
     [Display(Name = "Email")]
     public string Email { get; set; }
   }
-  // public async Task OnGetAsync(string returnUrl = null)
-  // {
-  // }
 
   public async Task<IActionResult> OnPostAsync(string returnUrl = null)
   {
