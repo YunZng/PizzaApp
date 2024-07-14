@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using ContactManager.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using PizzaApp.Areas.Identity.Data;
 using PizzaApp.Services;
 
 namespace PizzaApp.Areas.Identity.Pages.Account;
+[Authorize(Roles = "Owner,Manager")]
 public class InviteUserModel : PageModel
 {
   public string ReturnUrl { get; set; }
