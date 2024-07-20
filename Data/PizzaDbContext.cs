@@ -14,5 +14,6 @@ namespace PizzaApp.Data
 
         public DbSet<Pizza> Pizza { get; set; } = default!;
         public DbSet<Invitation> Invitations { get; set; } = default!;
+        public DbSet<Company> Companies { get; set; } = default!;
     }
 }

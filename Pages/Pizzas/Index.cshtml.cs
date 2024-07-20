@@ -24,27 +24,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var pizzas = await _context.Pizza.ToListAsync();
         PizzaIdentityUser user = await _userManager.GetUserAsync(User);
-        if (await _userManager.IsInRoleAsync(user, Constants.Owner))
-        {
-            Pizza = pizzas;
-        }
-        else
-        {
-            foreach (var pizza in pizzas)
-            {
-                if (pizza.AdminGroup == user.Company || pizza.AdminGroup == user.Email)
-                {
-                    Pizza.Add(new Pizza
-                    {
-                        Id = pizza.Id,
-                        Name = pizza.Name,
-                        Price = pizza.Price,
-                        AdminGroup = pizza.AdminGroup
-                    });
-                }
-            }
-        }
+        var pizzas = await _context.Pizza.Where(pizza => pizza.Company == user.Company).ToListAsync();
+        Pizza = pizzas;
     }
 }
