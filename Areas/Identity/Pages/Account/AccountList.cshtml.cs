@@ -38,29 +38,14 @@ public class AccountListModel : PageModel
   // If the account is admin/manager, get every account created by this user.
   public async Task OnGetAsync()
   {
-    Users = await _context.Users.ToListAsync();
     PizzaIdentityUser loggedInUser = await _userManager.GetUserAsync(User);
-    // Owner
-    if (await _userManager.IsInRoleAsync(loggedInUser, Constants.Owner))
+    Users = await _context.Users.Where(user => user.Company == loggedInUser.Company && user.Email != loggedInUser.Email).ToListAsync();
+    foreach (var user in Users)
     {
-      foreach (var user in Users)
+      if (!await _userManager.IsInRoleAsync(user, Constants.Owner))
       {
         IList<string> roles = await _userManager.GetRolesAsync(user);
-        if (user.Email != loggedInUser.Email)
-        {
-          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles});
-        }
-      }
-    }
-    else if (await _userManager.IsInRoleAsync(loggedInUser, Constants.Manager))
-    {
-      foreach (var user in Users)
-      {
-        IList<string> roles = await _userManager.GetRolesAsync(user);
-        if (user.Email != loggedInUser.Email && user.Company == loggedInUser.Email)
-        {
-          userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles});
-        }
+        userRoles.Add(new UserRoles { Id = user.Id, Username = user.UserName, Email = user.Email!, Roles = roles });
       }
     }
   }
