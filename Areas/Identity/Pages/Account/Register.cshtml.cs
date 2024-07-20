@@ -3,19 +3,16 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Text;
 using ContactManager.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using NuGet.Protocol;
 using PizzaApp.Areas.Identity.Data;
 using PizzaApp.Data;
 using WebPWrecover.Services;
@@ -100,9 +97,10 @@ public class RegisterModel : PageModel
             {
                 RedirectToPage("/Identity/Account/InvalidToken");
             }
+            var companyName = (await _context.Companies.FindAsync(Guid.Parse(Invitation.Company))).Name;
             Input = new InputModel
             {
-                Company = Invitation.Company,
+                Company = companyName,
                 Email = Invitation.Email,
             };
             Disabled = true;
@@ -113,13 +111,15 @@ public class RegisterModel : PageModel
     {
         returnUrl ??= Url.Content("~/");
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        // If invitation detected, prefill the form
         if (Invitation != null)
         {
             if (Invitation.IsUsed || Invitation.ExpiryDate < DateTime.Now)
             {
                 RedirectToPage("/Identity/Account/InvalidToken");
             }
-            Input.Company = Invitation.Company;
+            var companyName = (await _context.Companies.FindAsync(Guid.Parse(Invitation.Company))).Name;
+            Input.Company = companyName;
             Input.Email = Invitation.Email;
             Disabled = true;
             ModelState.Remove("Input.Company");
@@ -131,8 +131,17 @@ public class RegisterModel : PageModel
             // Use owner role by default.
             var role = Disabled ? Invitation.Role : Constants.Owner;
 
+            // check if company name exists, if not create one
+            var company = await _context.Companies.FirstOrDefaultAsync(c => c.Name == Input.Company);
+            if (company == null)
+            {
+                company = new Company { Name = Input.Company };
+                _context.Companies.Add(company);
+                await _context.SaveChangesAsync();
+            }
+
             var user = CreateUser();
-            user.Company = Input.Company;
+            user.Company = company.Id.ToString();
             await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
             var result = await _userManager.CreateAsync(user, Input.Password);
