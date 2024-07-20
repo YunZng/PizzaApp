@@ -1,5 +1,4 @@
 #nullable disable
-using ContactManager.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -40,14 +39,12 @@ namespace PizzaApp.Pages.Pizzas
         {
             _logger.LogInformation("call me");
             PizzaIdentityUser user = await _userManager.GetUserAsync(User);
-            var isAdmin = await _userManager.IsInRoleAsync(user, Constants.Manager);
-            var adminGroup = isAdmin ? user.Email : user.Company;
             if (!ModelState.IsValid)
             {
                 _logger.LogError("Model state is invalid");
                 return Page();
             }
-            _context.Pizza.Add(new Pizza{Name = Pizza.Name, Price = Pizza.Price, AdminGroup = adminGroup});
+            _context.Pizza.Add(new Pizza{Name = Pizza.Name, Price = Pizza.Price, Company = user.Company});
             await _context.SaveChangesAsync();
             return RedirectToPage("./Index");
         }

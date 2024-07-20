@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PizzaApp.Areas.Identity.Data;
+using PizzaApp.Data;
 using PizzaApp.Services;
 
 namespace PizzaApp.Areas.Identity.Pages.Account;
@@ -16,25 +17,27 @@ namespace PizzaApp.Areas.Identity.Pages.Account;
 public class InviteUserModel : PageModel
 {
   public string ReturnUrl { get; set; }
+  public PizzaDbContext _context { get; set; }
   private readonly UserManager<PizzaIdentityUser> _userManager;
   private readonly ILogger<RegisterModel> _logger;
   private readonly IEmailSender _emailSender;
   private readonly InvitationService _invitationService;
-  public string Role { get; set; } = Constants.Staff;
   public string StatusMessage { get; set; } = default!;
   public string DisplayStatus { get; set; } = ".d-none";
 
   public List<SelectListItem> Roles { get; } = new List<SelectListItem>
         {
-            new SelectListItem { Value = Constants.Staff, Text = Constants.Staff  },
+            new SelectListItem { Value = Constants.Staff, Text = Constants.Staff, Selected = true },
             new SelectListItem { Value = Constants.Manager, Text = Constants.Manager },
         };
   public InviteUserModel(
+      PizzaDbContext context,
       UserManager<PizzaIdentityUser> userManager,
       ILogger<RegisterModel> logger,
       IEmailSender emailSender,
       InvitationService invitationService)
   {
+    _context = context;
     _userManager = userManager;
     _logger = logger;
     _emailSender = emailSender;
@@ -58,10 +61,11 @@ public class InviteUserModel : PageModel
   public async Task<IActionResult> OnPostAsync(string returnUrl = null)
   {
     var user = await _userManager.GetUserAsync(User);
-    var company = user.Company;
+    var company = (await _context.Companies.FindAsync(Guid.Parse(user.Company))).Name;
+
     try
     {
-      var link = await _invitationService.GenerateInvitationLink(Input.Email, Role, company, TimeSpan.FromDays(1));
+      var link = await _invitationService.GenerateInvitationLink(Input.Email, Input.Role, user.Company, TimeSpan.FromDays(1));
       _logger.LogInformation("{link} generated", link);
       await _emailSender.SendEmailAsync(Input.Email, "Invitation to Register", $"You have been invited to join {company} as a {Input.Role}. Please follow this link to create your account within 24 hours {link}");
       StatusMessage = "Your invitation has been sent.";
